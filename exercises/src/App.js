@@ -1,11 +1,11 @@
 import './App.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import P from 'prop-types';
 
-const Post = ({ post }) => {
+const Post = ({ post, handleClick }) => {
   return (
     <div key={post.id} className="post">
-      <h1> {post.title} </h1>
+      <h1 onClick={() => handleClick(post.title)}> {post.title} </h1>
       <p> {post.body} </p>
     </div>
   );
@@ -17,11 +17,13 @@ Post.propTypes = {
     title: P.string,
     body: P.string,
   }),
+  handleClick: P.func,
 };
 
 function App() {
   const [post, setPosts] = useState([]);
   const [value, setValue] = useState('');
+  const input = useRef(null);
 
   useEffect(() => {
     fetch('https://jsonplaceholder.typicode.com/posts')
@@ -29,10 +31,20 @@ function App() {
       .then((r) => setPosts(r));
   }, []);
 
+  useEffect(() => {
+    input.current.focus();
+    console.log(input.current);
+  }, [value]);
+
+  const handleClick = (value) => {
+    setValue(value);
+  };
+
   return (
     <div className="App">
       <p>
         <input
+          ref={input}
           type="search"
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -41,7 +53,7 @@ function App() {
 
       {useMemo(() => {
         return post.map((post) => {
-          return <Post key={post.id} post={post} />;
+          return <Post key={post.id} post={post} handleClick={handleClick} />;
         });
       }, [post])}
     </div>
