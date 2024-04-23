@@ -1,67 +1,53 @@
-import P from 'prop-types';
 import './App.css';
-import { createContext, useContext, useReducer, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export const actions = {
-  CHANGE_TITLE: 'CHANGE_TITLE',
-};
+const useMyHook = (cb, deLay = 1000) => {
+  const savedCb = useRef();
 
-export const globaState = {
-  title: 'O título do contexto',
-  body: 'O body do contexto',
-  counter: 0,
-};
+  useEffect(() => {
+    savedCb.current = cb;
+  }, [cb]);
 
-export const reducer = (state, action) => {
-  switch (action.type) {
-    case actions.CHANGE_TITLE: {
-      console.log('Mudar título');
-      return { ...state, title: action.payload };
-    }
-  }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      savedCb.current();
+    }, deLay);
 
-  return { ...state };
-};
-
-export const Context = createContext();
-export const AppContext = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, globaState);
-
-  const changeTitle = (payLoad) => {
-    dispatch({ type: actions.CHANGE_TITLE, payLoad });
-  };
-
-  return (
-    <Context.Provider value={{ state, changeTitle }}>
-      {children}
-    </Context.Provider>
-  );
-};
-
-AppContext.propTypes = {
-  children: P.node,
-};
-
-export const H1 = () => {
-  const context = useContext(Context);
-  const inputRef = useRef();
-  return (
-    <>
-      <h1 onClick={() => context.changeTitle(inputRef.current.value)}>
-        {context.state.title}{' '}
-      </h1>
-      <input type="text" ref={inputRef} />
-    </>
-  );
+    return () => clearInterval(interval);
+  }, [deLay]);
 };
 
 function App() {
+  const [counter, setCounter] = useState(0);
+  const [delay, setDelay] = useState(1000);
+  const [incrementor, setIncrementor] = useState(100);
+
+  useMyHook(() => setCounter((c) => c + 1), delay);
+
   return (
-    <AppContext>
-      <div>
-        <H1 />
-      </div>
-    </AppContext>
+    <div>
+      <h1>Contador {counter} </h1>
+      <h1>Delay {delay} </h1>
+      <button
+        onClick={() => {
+          setDelay((d) => d + incrementor);
+        }}
+      >
+        +{incrementor}{' '}
+      </button>
+      <button
+        onClick={() => {
+          setDelay((d) => d - incrementor);
+        }}
+      >
+        -{incrementor}{' '}
+      </button>
+      <input
+        type="number"
+        value={incrementor}
+        onChange={(e) => setIncrementor(Number(e.target.value))}
+      ></input>
+    </div>
   );
 }
 
